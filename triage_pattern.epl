@@ -1,0 +1,74 @@
+@Name("AgeManagement")
+on Patient
+	insert into AgeClassification select patient as patient, "baby" as class where age < 12
+	insert into AgeClassification select patient as patient, "child" as class where age < 216
+	insert into AgeClassification select patient as patient, "adult" as class where age < 780
+	insert into AgeClassification select patient as patient, "elder" as class
+	output first;
+	
+@Name("TemperatureManagement")
+on Temperature
+	insert into TemperatureClassification select patient as patient, "very hot" as class where value > 41.0
+	insert into TemperatureClassification select patient as patient, "hot" as class where value > 38.5
+	insert into TemperatureClassification select patient as patient, "warm" as class where value > 37.1
+	insert into TemperatureClassification select patient as patient, "cold" as class where value < 35.0
+	output first;
+	
+@Name("LifeThreatEmergency")
+on LifeThreat
+	insert into EmergencyLevel select patient as patient, 5 as level where type in (0, 1, 2)
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 3
+	output first;
+
+@Name("ConsciousLevelEmergency")
+on ConsciousLevel
+	insert into EmergencyLevel select patient as patient, 5 as level where type = 0 or (type = 1 and (select class as class from AgeClassification.win:length(1) a where a.patient=patient) in ("baby", "child"))
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 1 or type = 2
+	insert into EmergencyLevel select patient as patient, 3 as level where type = 3
+	output first;
+
+@Name("HaemorrhageEmergency")
+on Haemorrhage
+	insert into EmergencyLevel select patient as patient, 5 as level where type = 0
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 1
+	insert into EmergencyLevel select patient as patient, 3 as level where type = 2
+	output first;
+
+@Name("TemperatureEmergency")
+on TemperatureClassification
+	insert into EmergencyLevel select patient as patient, 4 as level where class in ("very hot", "cold") or (class = "hot" and (select class as class from AgeClassification.win:length(1) a where a.patient=patient) = "baby")
+	insert into EmergencyLevel select patient as patient, 3 as level where class = "hot"
+	insert into EmergencyLevel select patient as patient, 2 as level where class = "warm"
+	output first;
+
+@Name("PainEmergency")
+on Pain
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 0
+	insert into EmergencyLevel select patient as patient, 3 as level where type = 1
+	insert into EmergencyLevel select patient as patient, 2 as level where type = 2
+	insert into EmergencyLevel select patient as patient, 1 as level where type = 3
+	output first;
+
+@Name("SpecificEmergencylevel")
+on Symptom
+	insert into EmergencyLevel select patient as patient, 5 as level where name in ("severe thirst", "slenderness")
+	insert into EmergencyLevel select patient as patient, 4 as level where name in ("self-harm high risk", "other-harm high risk", "violence", "abnormal pulse", "intoxication history", "chest pain", "difficulty speaking", "significant respiratory history", "sunken ribs", "swollen face", "blood vomit", "rectal bleeding leakage")
+	insert into EmergencyLevel select patient as patient, 3 as level where name in ("self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily", "palpitations", "significant cardiac history", "ineffective medication", "nostril flare", "skin rash", "swollen hands", "blood vomit history", "red or black deposition", "dehidration signs", "frequent deposition")
+	insert into EmergencyLevel select patient as patient, 2 as level where name in ("recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor", "dry cough", "localized swelling", "vomiting", "anorexia")
+	insert into EmergencyLevel select patient as patient, 1 as level where name in ("crying", "relative cardiac history", "wet cough", "recent swelling", "nausea", "thrist", "abdominal pain")
+	output first;
+
+@Name("SpecificSymptomClassification")
+on Symptom
+	insert into SymptomClassification select patient as patient, "mental" as class where name in ("self-harm high risk", "other-harm high risk", "violence", "self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily", "recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor", "crying")
+	insert into SymptomClassification select patient as patient, "palpitations" as class where name in ("abnormal pulse", "intoxication history", "chest pain", "palpitations", "significant cardiac history", "relative cardiac history")
+	insert into SymptomClassification select patient as patient, "asthma" as class where name in ("difficulty speaking", "abnormal pulse", "significant respiratory history", "chest pain", "sunken ribs", "ineffective medication", "nostril flare", "dry cough", "wet cough")
+	insert into SymptomClassification select patient as patient, "allergy" as class where name in ("difficulty speaking", "swollen face", "abnormal pulse", "skin rash", "swollen hands", "localized swelling", "recent swelling")
+	insert into SymptomClassification select patient as patient, "diarrvomit" as class where name in ("severe thirst", "slenderness", "blood vomit", "rectal bleeding leakage", "blood vomit history", "red or black deposition", "dehidration signs", "frequent deposition", "vomiting", "anorexia", "nausea", "thrist", "abdominal pain")
+	output all;
+
+@Name("CurrentEmergencyLevel")
+select patient as patient, max(level) as level from EmergencyLevel.win:time(8 hours);
+
+@Name("CurrentClassification")
+select patient as patient, class as class, max(count(*)) as factors from SymptomClassification.win:time(8 hours) group by class;

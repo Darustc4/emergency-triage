@@ -1,0 +1,67 @@
+@public @buseventtype create json schema Patient as (patient Integer, ssn String, age Integer, latitude Float, longitude Float);
+
+// [Breathing related symptoms]
+// 0- Airway compromise (stridor, drooling).
+// 1- Inadequate breathing.
+// 2- Shock.
+// 3- Moderate breathing difficulty.
+@public @buseventtype create json schema LifeThreat as (patient Integer, type Integer);
+
+// [Consciousness related symptoms]
+// 0- Currently fitting.
+// 1- Altered conscious level. Unresponsive or severe.
+// 2- Altered conscious level. Responds to voice or pain.
+// 3- History of unconsciousness.
+@public @buseventtype create json schema ConsciousLevel as (patient Integer, type Integer);
+
+// [Bleeding related symptoms]
+// 0- Exsanguinating.
+// 1- Uncontrollable major.
+// 2- Uncontrollable minor.
+@public @buseventtype create json schema Haemorrhage as (patient Integer, type Integer);
+
+// [Temperature related symptoms]
+// Temperature in ºC
+@public @buseventtype create json schema Temperature as (patient Integer, value Float);
+
+// [Pain related symptoms]
+// 0- Severe, unbearable pain or itch.
+// 1- Moderate, bearable pain or itch.
+// 2- Recent mild pain.
+// 3- Recent mild itch.
+@public @buseventtype create json schema Pain as (patient Integer, type Integer);
+
+// [Specific symptoms]
+// Mental 
+//	2 "self-harm high risk", "other-harm high risk", "violence" 
+//	3 "self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily"
+//	4 "recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor"
+//	5 "crying"
+//
+// Palpitations
+//	2 "abnormal pulse", "intoxication history", "chest pain"
+//	3 "palpitations", "sgnificant cardiac history"
+//	5 "relative cardiac history"
+//
+// Asthma
+//	2 "difficulty speaking", "abnormal pulse", "significant respiratory history", "chest pain", "sunken ribs"
+//	3 "ineffective medication", "raise", "nostril flare"
+//	4 "dry cough"
+//	5 "wet cough"
+//
+// Allergy
+//	2 "difficulty speaking", "swollen face", "abnormal pulse"
+//	3 "skin rash", "swollen hands"
+//	4 "localized swelling"
+//	5 "recent swelling"
+//
+// Diarrhea/Vomiting
+//	1 "Severe thirst", "slenderness"
+//	2 "blood vomit", "rectal bleeding leakage"
+//	3 "blood vomit history", "red or black deposition", "dehidration signs", "frequent deposition"
+//	4 "vomiting", "anorexia"
+//	5 "nausea", "thrist", "abdominal pain"
+@public @buseventtype create json schema Symptom as (patient Integer, name String);
+
+
+@public @buseventtype create json schema EmergencyLevel as (patient Integer, level Integer);

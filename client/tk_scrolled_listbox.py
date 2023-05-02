@@ -23,6 +23,7 @@ class ScrolledListbox(ctk.CTkFrame):
         self.sethighlight(kwargs.get('highlightcolor',None))
         self.setselectbackground(kwargs.get('selectbackground',None))
         self.setexportselection(kwargs.get('exportselection',1))
+        self.listbox.configure(**kwargs)
 
 
     def listvariable(self, item_list):
@@ -78,6 +79,29 @@ class ScrolledListbox(ctk.CTkFrame):
             if not listbox_entry in selected_item:
                 self.listbox.delete(i - idx_count)
                 idx_count += 1
+
+    def clear_selected(self):
+        selected_item = self.listbox.curselection()
+        for index in selected_item:
+            self.listbox.selection_clear(index)
+
+    def disable_list(self):
+        self.listbox.configure(state=tk.DISABLED)
+
+    def activate_list(self):
+        self.listbox.configure(state=tk.NORMAL)
+
+    def set_selected(self, names):
+        if names == None:
+            return
+
+        self.listbox.selection_clear(0, tk.END)
+        for name in names:
+            index = self.listbox.get(0, tk.END).index(name)
+            self.listbox.selection_set(index)
+
+    def get_selected(self):
+        return [self.listbox.get(item) for item in self.listbox.curselection()]
 
 if __name__ == '__main__':
 

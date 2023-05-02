@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import customtkinter as ctk
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from tk_scrolled_listbox import ScrolledListbox
 
 ctk.set_appearance_mode("System")
@@ -44,8 +44,51 @@ class Patient:
     def get_sex(self):
         return "Male" if self.is_male else "Female"
 
+@dataclass
+class Symptoms:
+    life_threat: str = None
+    consciousness: str = None
+    haemorrhage: str = None
+    temperature: float = 36.1
+    pain_level: str = None
+    specific: list = field(default_factory=list)
+
+@dataclass
+class Patient_unit:
+    patient: Patient
+    symptoms: Symptoms
+    published: Symptoms
+    row: list
+
+class Cep_manager:
+    def __init__(self) -> None:
+        pass
+
+    def publish_patient(self, patient: Patient):
+        pass
+
+    def publish_life_threat(self, id, life_threat_id):
+        pass
+
+    def publish_consciousness(self, id, consciousness_id):
+        pass
+
+    def publish_haemorrhage(self, id, haemorrhage_id):
+        pass
+
+    def publish_temperature(self, id, temperature_float):
+        pass
+
+    def publish_pain_level(self, id, pain_level_id):
+        pass
+
+    def publish_specific_symptom(self, id, symptom_name):
+        pass
+
 class Triage(ctk.CTk):
     def __init__(self):
+
+        self.cep_manager = Cep_manager()
 
         # These symptoms are only for mental, palpitations, asthma, allergy and diarrhea and vomit emergencies. The complete list of symptoms is in the Manchester Triage handbook.
         self.specific_symptoms = {
@@ -99,11 +142,49 @@ class Triage(ctk.CTk):
             "Thrist": "thrist",
             "Abdominal pain": "abdominal pain"
         }
+        self.inverse_specific_symptoms_options = {v: k for k, v in self.specific_symptoms.items()}
+
+        self.life_threat_options = {
+            "-": None,
+            "Shock": 2,
+            "Compromised": 0,
+            "Inadequate": 1,
+            "Difficult": 3
+        }
+        self.inverse_life_threat_options = {v: k for k, v in self.life_threat_options.items()}
+
+        self.consciousness_options = {
+            "-": None,
+            "Fitting": 0,
+            "Unresponsive": 1,
+            "Alt. Responsive": 2,
+            "History": 3
+        }
+        self.inverse_consciousness_options = {v: k for k, v in self.consciousness_options.items()}
+
+        self.haemorrhage_options = {
+            "-": None,
+            "Extreme": 0,
+            "Major": 1,
+            "Minor": 2
+        }
+        self.inverse_haemorrhage_options = {v: k for k, v in self.haemorrhage_options.items()}
+
+        self.pain_level_options = {
+            "-": None,
+            "Severe": 0,
+            "Moderate": 1,
+            "Mild Pain": 2,
+            "Mild Itch": 3
+        }
+        self.inverse_pain_level_options = {v: k for k, v in self.pain_level_options.items()}
 
         self.patients = []
         self.next_patient_id = 0
+        self.selected_patient_idx = None
 
         self.create_tk()
+        self.clear_edit()
 
     def create_tk(self):
         super().__init__()
@@ -252,32 +333,40 @@ class Triage(ctk.CTk):
         self.tk_specific_label.grid(row=6, column=0, sticky="nsew")
 
         self.tk_life_threat_var = tk.StringVar(value="-")
-        self.tk_life_threat_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Shock", "Compromised", "Inadequate", "Difficult"], variable=self.tk_life_threat_var)
-        self.tk_life_threat_frame.grid(row=1, column=1, sticky="nsew", padx=1, pady=1)
+        self.tk_life_threat_selector = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Shock", "Compromised", "Inadequate", "Difficult"], variable=self.tk_life_threat_var)
+        self.tk_life_threat_selector.grid(row=1, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_consciousness_var = tk.StringVar(value="-")
-        self.tk_consciousness_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, values=["-", "Fitting", "Unresponsive", "Alt. Responsive", "History"], variable=self.tk_consciousness_var)
-        self.tk_consciousness_frame.grid(row=2, column=1, sticky="nsew", padx=1, pady=1)
+        self.tk_consciousness_selector = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, values=["-", "Fitting", "Unresponsive", "Alt. Responsive", "History"], variable=self.tk_consciousness_var)
+        self.tk_consciousness_selector.grid(row=2, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_haemorrhage_var = tk.StringVar(value="-")
-        self.tk_haemorrhage_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Extreme", "Major", "Minor"], variable=self.tk_haemorrhage_var)
-        self.tk_haemorrhage_frame.grid(row=3, column=1, sticky="nsew", padx=1, pady=1)
-        self.tk_temperature_var = tk.StringVar(value="-")
-        self.tk_temperature_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, values=["-", "Very Hot", "Hot", "Warm", "Cold"], variable=self.tk_temperature_var)
+        self.tk_haemorrhage_selector = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Extreme", "Major", "Minor"], variable=self.tk_haemorrhage_var)
+        self.tk_haemorrhage_selector.grid(row=3, column=1, sticky="nsew", padx=1, pady=1)
+
+        self.tk_temperature_frame = ctk.CTkFrame(self.tk_edit_patient_frame, fg_color=vlight_widget_color)
         self.tk_temperature_frame.grid(row=4, column=1, sticky="nsew", padx=1, pady=1)
+        self.tk_temperature_frame.grid_rowconfigure(0, weight=1)
+        self.tk_temperature_frame.grid_columnconfigure(0, weight=1)
+        self.tk_temperature_frame.grid_columnconfigure(1, weight=8)
+        self.tk_temperature_var = tk.StringVar(value="36.1ºC")
+        self.tk_temperature_label = ctk.CTkLabel(self.tk_temperature_frame, textvariable=self.tk_temperature_var, bg_color=vlight_widget_color, text_color=subheader_font_color)
+        self.tk_temperature_label.grid(row=0, column=0, sticky="nsew", padx=1, pady=1)
+        self.tk_temperature_slider = ctk.CTkSlider(self.tk_temperature_frame, from_=30.0, to=45.0, command=self.on_temperature_slider_changed)
+        self.tk_temperature_slider.grid(row=0, column=1, sticky="nsew", padx=1, pady=1)
+
         self.tk_pain_level_var = tk.StringVar(value="-")
-        self.tk_pain_level_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Severe", "Moderate", "Mild Pain", "Mild Itch"], variable=self.tk_pain_level_var)
-        self.tk_pain_level_frame.grid(row=5, column=1, sticky="nsew", padx=1, pady=1)
+        self.tk_pain_level_selector = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Severe", "Moderate", "Mild Pain", "Mild Itch"], variable=self.tk_pain_level_var)
+        self.tk_pain_level_selector.grid(row=5, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_specific_var = tk.StringVar(value="-")
         self.tk_specific_selector = ScrolledListbox(self.tk_edit_patient_frame, listvariable=sorted(self.specific_symptoms.keys()), selectmode=tk.MULTIPLE)
         self.tk_specific_selector.grid(row=6, column=1, sticky="nsew", padx=1, pady=1)
 
-        self.tk_specific_selector.bind('<Configure>', self.on_specific_selector_configure)
+        self.tk_delete_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Delete\nPatient", fg_color=dark_widget_color, command=lambda: self.remove_patient_row(self.selected_patient_idx), width=10, border_width=2, border_color=dark_widget_color)
+        self.tk_delete_button.grid(row=1, column=2, sticky="nsew", rowspan=2, padx=5, pady=3)
+        self.tk_submit_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Submit\nChanges", fg_color=button_color, command=self.submit_patient_changes, width=10, border_width=2, border_color=dark_widget_color)
+        self.tk_submit_button.grid(row=3, column=2, sticky="nsew", rowspan=5, padx=5, pady=3)
 
-        self.tk_submit_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Submit", fg_color=button_color, command=self.submit_patient_changes, width=10, border_width=2, border_color=dark_widget_color)
-        self.tk_submit_button.grid(row=1, column=2, sticky="nsew", rowspan=7, padx=5, pady=5)
-
-    def on_specific_selector_configure(self, event):
-        style = ttk.Style()
-        style.configure('TCombobox', postoffset=(0,0,0,0))
+    def on_temperature_slider_changed(self, value):
+        self.tk_temperature_var.set(str(round(value,1))+u"ºC")
 
     def add_patient(self):
         ssn = self.tk_add_patient_ssn_entry.get()
@@ -314,21 +403,27 @@ class Triage(ctk.CTk):
         patient_row[6].grid(row=row, column=6, sticky="nsew")
         patient_row[7] = ctk.CTkLabel(self.tk_patients_list_frame, text=classification, bg_color=vlight_widget_color, text_color=subheader_font_color)
         patient_row[7].grid(row=row, column=7, sticky="nsew")
-        self.patients.append(patient_row)
+
+        patient_unit = Patient_unit(patient=patient, symptoms=Symptoms(), published=Symptoms(), row=patient_row)
+        self.patients.append(patient_unit)
 
         self.next_patient_id += 1
 
     def patient_selected(self, id):
         print("Patient " + str(id) + " selected.")
 
-        self.selected_idx = None
+        self.selected_patient_idx = None
         for idx, patient in enumerate(self.patients):
-            patient[0].configure(fg_color=button_color)
+            row = patient.row
+            row[0].configure(fg_color=button_color)
 
-            if patient[0].cget("text") == str(id):
-                self.selected_idx = idx
+            if row[0].cget("text") == str(id):
+                self.selected_patient_idx = idx
 
-        self.patients[self.selected_idx][0].configure(fg_color=button_highlight_color)
+        self.patients[self.selected_patient_idx].row[0].configure(fg_color=button_highlight_color)
+
+        self.clear_edit()
+        self.activate_edit(self.patients[self.selected_patient_idx])
 
     def remove_patient_row(self, idx):
         self.patients.pop(idx)
@@ -342,17 +437,98 @@ class Triage(ctk.CTk):
 
         self.tk_patients_list_frame.update_idletasks()
 
-        if self.selected_idx == idx:
-            self.selected_idx = None
+        if self.selected_patient_idx == idx:
+            self.selected_patient_idx = None
             self.clear_edit()
-        elif self.selected_idx > idx:
-            self.selected_idx -= 1
+        elif self.selected_patient_idx > idx:
+            self.selected_patient_idx -= 1
 
     def clear_edit(self):
-        pass
+        self.tk_life_threat_var.set("-")
+        self.tk_consciousness_var.set("-")
+        self.tk_haemorrhage_var.set("-")
+        self.tk_temperature_var.set("36.1ºC")
+        self.tk_pain_level_var.set("-")
+
+        # Disable all frame buttons
+        for widget in self.tk_edit_patient_frame.winfo_children():
+            if type(widget) in (ctk.CTkSegmentedButton, ctk.CTkButton):
+                widget.configure(state="disabled")
+
+        self.tk_temperature_slider.set(36.1)
+        self.tk_temperature_slider.configure(state="disabled")
+        self.tk_specific_selector.clear_selected()
+        self.tk_specific_selector.disable_list()
+
+    def activate_edit(self, patient):
+        for widget in self.tk_edit_patient_frame.winfo_children():
+            if type(widget) in (ctk.CTkSegmentedButton, ctk.CTkButton):
+                widget.configure(state="normal")
+
+        self.tk_temperature_slider.configure(state="normal")
+        self.tk_specific_selector.activate_list()
+
+        if patient.symptoms.life_threat:
+            self.tk_life_threat_var.set(self.inverse_life_threat_options[patient.symptoms.life_threat])
+        if patient.symptoms.consciousness:
+            self.tk_consciousness_var.set(self.inverse_consciousness_options[patient.symptoms.consciousness])
+        if patient.symptoms.haemorrhage:
+            self.tk_haemorrhage_var.set(self.inverse_haemorrhage_options[patient.symptoms.haemorrhage])
+        self.tk_temperature_slider.set(patient.symptoms.temperature)
+        self.tk_temperature_var.set(str(patient.symptoms.temperature) + "ºC")
+        if patient.symptoms.pain_level:
+            self.tk_pain_level_var.set(self.inverse_pain_level_options[patient.symptoms.pain_level])
+        if patient.symptoms.specific:
+            self.tk_specific_selector.set_selected([self.inverse_specific_symptoms_options[i] for i in patient.symptoms.specific])
 
     def submit_patient_changes(self):
-        pass
+        life_threat = self.tk_life_threat_var.get()
+        consciousness = self.tk_consciousness_var.get()
+        haemorrhage = self.tk_haemorrhage_var.get()
+        temperature = float(self.tk_temperature_var.get()[:-2])
+        pain_level = self.tk_pain_level_var.get()
+
+        if life_threat == "-": life_threat = None
+        if consciousness == "-": consciousness = None
+        if haemorrhage == "-": haemorrhage = None
+        if pain_level == "-": pain_level = None
+
+        symptoms_container = self.patients[self.selected_patient_idx].symptoms
+        symptoms_container.life_threat = self.life_threat_options.get(life_threat)
+        symptoms_container.consciousness = self.consciousness_options.get(consciousness)
+        symptoms_container.haemorrhage = self.haemorrhage_options.get(haemorrhage)
+        symptoms_container.temperature = temperature
+        symptoms_container.pain_level = self.pain_level_options.get(pain_level)
+        symptoms_container.specific = list(map(self.specific_symptoms.get, self.tk_specific_selector.get_selected()))
+
+        self.publish_to_cep(self.patients[self.selected_patient_idx])
+
+    def publish_to_cep(self, patient_unit):
+        patient = patient_unit.patient
+        symptoms = patient_unit.symptoms
+        published = patient_unit.published
+
+        if symptoms.life_threat and symptoms.life_threat != published.life_threat:
+            self.cep_manager.publish_life_threat(patient.id, symptoms.life_threat)
+            published.life_threat = symptoms.life_threat
+        if symptoms.consciousness and symptoms.consciousness != published.consciousness:
+            self.cep_manager.publish_consciousness(patient.id, symptoms.consciousness)
+            published.consciousness = symptoms.consciousness
+        if symptoms.haemorrhage and symptoms.haemorrhage != published.haemorrhage:
+            self.cep_manager.publish_haemorrhage(patient.id, symptoms.haemorrhage)
+            published.haemorrhage = symptoms.haemorrhage
+        if symptoms.temperature and symptoms.temperature != published.temperature:
+            self.cep_manager.publish_temperature(patient.id, symptoms.temperature)
+            published.temperature = symptoms.temperature
+        if symptoms.pain_level and symptoms.pain_level != published.pain_level:
+            self.cep_manager.publish_pain_level(patient.id, symptoms.pain_level)
+            published.pain_level = symptoms.pain_level
+        if symptoms.specific:
+            for symptom in symptoms.specific:
+                if symptom not in published.specific:
+                    self.cep_manager.publish_specific_symptom(patient.id, symptom)
+            published.specific = symptoms.specific
+
 
     def set_patients_header_grid(self):
         self.tk_patients_id_label.grid(row=0, column=0, sticky="nsew")

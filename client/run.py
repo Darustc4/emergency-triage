@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 import customtkinter as ctk
 from enum import Enum
 from dataclasses import dataclass
+from tk_scrolled_listbox import ScrolledListbox
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -47,7 +48,57 @@ class Triage(ctk.CTk):
     def __init__(self):
 
         # These symptoms are only for mental, palpitations, asthma, allergy and diarrhea and vomit emergencies. The complete list of symptoms is in the Manchester Triage handbook.
-        self.specific_symptoms = {"self-harm high risk", "other-harm high risk", "violence", "self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily", "recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor", "crying", "abnormal pulse", "intoxication history", "chest pain", "palpitations", "significant cardiac history", "relative cardiac history", "difficulty speaking", "abnormal pulse", "significant respiratory history", "chest pain", "sunken ribs", "ineffective medication", "nostril flare", "dry cough", "wet cough", "difficulty speaking", "swollen face", "abnormal pulse", "skin rash", "swollen hands", "localized swelling", "recent swelling", "severe thirst", "slenderness", "blood vomit", "rectal bleeding leakage", "blood vomit history", "red or black deposition", "dehidration signs", "frequent deposition", "vomiting", "anorexia", "nausea", "thrist", "abdominal pain"}
+        self.specific_symptoms = {
+            "High risk of self-harm": "self-harm high risk",
+            "High risk of harming others": "other-harm high risk",
+            "Violence": "violence",
+            "Moderate risk of self-harm": "self-harm moderate risk",
+            "Moderate risk of harming others": "other-harm moderate risk",
+            "Significant distress": "significant distress",
+            "Significant psychiatric history": "significant psychiatric history",
+            "Agressive demeanor": "agressive demeanor",
+            "Crying easily": "crying easily",
+            "Recent risk of self-harm": "recent self-harm risk",
+            "Recent risk of harming others": "recent other-harm risk",
+            "Moderate distress": "moderate distress",
+            "Disruptive demeanor": "disruptive demeanor",
+            "Crying": "crying",
+            "Abnormal pulse": "abnormal pulse",
+            "Intoxication history": "intoxication history",
+            "Chest pain": "chest pain",
+            "Palpitations": "palpitations",
+            "Significant cardiac history": "significant cardiac history",
+            "Relative cardiac history": "relative cardiac history",
+            "Difficulty speaking": "difficulty speaking",
+            "Abnormal pulse": "abnormal pulse",
+            "Significant respiratory history": "significant respiratory history",
+            "Chest pain": "chest pain",
+            "Sunken ribs": "sunken ribs",
+            "Ineffective medication": "ineffective medication",
+            "Nostril flare": "nostril flare",
+            "Dry cough": "dry cough",
+            "Wet cough": "wet cough",
+            "Difficulty speaking": "difficulty speaking",
+            "Swollen face": "swollen face",
+            "Abnormal pulse": "abnormal pulse",
+            "Skin rash": "skin rash",
+            "Swollen hands": "swollen hands",
+            "Localized swelling": "localized swelling",
+            "Recent swelling": "recent swelling",
+            "Severe thirst": "severe thirst",
+            "Slenderness": "slenderness",
+            "Blood vomit": "blood vomit",
+            "Rectal bleeding leakage": "rectal bleeding leakage",
+            "Blood vomit history": "blood vomit history",
+            "Red or black deposition": "red or black deposition",
+            "Dehidration signs": "dehidration signs",
+            "Frequent deposition": "frequent deposition",
+            "Vomiting": "vomiting",
+            "Anorexia": "anorexia",
+            "Nausea": "nausea",
+            "Thrist": "thrist",
+            "Abdominal pain": "abdominal pain"
+        }
 
         self.patients = []
         self.next_patient_id = 0
@@ -201,25 +252,32 @@ class Triage(ctk.CTk):
         self.tk_specific_label.grid(row=6, column=0, sticky="nsew")
 
         self.tk_life_threat_var = tk.StringVar(value="-")
-        self.tk_life_threat_frame = ctk.CTkOptionMenu(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, button_color=dark_widget_color, values=["-", "Shock", "Compromised", "Inadequate", "Difficult"], variable=self.tk_life_threat_var)
+        self.tk_life_threat_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Shock", "Compromised", "Inadequate", "Difficult"], variable=self.tk_life_threat_var)
         self.tk_life_threat_frame.grid(row=1, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_consciousness_var = tk.StringVar(value="-")
-        self.tk_consciousness_frame = ctk.CTkOptionMenu(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, button_color=vdark_widget_color, values=["-", "Fitting", "Unresponsive", "Responsive", "History"], variable=self.tk_consciousness_var)
+        self.tk_consciousness_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, values=["-", "Fitting", "Unresponsive", "Alt. Responsive", "History"], variable=self.tk_consciousness_var)
         self.tk_consciousness_frame.grid(row=2, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_haemorrhage_var = tk.StringVar(value="-")
-        self.tk_haemorrhage_frame = ctk.CTkOptionMenu(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, button_color=dark_widget_color, values=["-", "Extreme", "Major", "Minor"], variable=self.tk_haemorrhage_var)
+        self.tk_haemorrhage_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Extreme", "Major", "Minor"], variable=self.tk_haemorrhage_var)
         self.tk_haemorrhage_frame.grid(row=3, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_temperature_var = tk.StringVar(value="-")
-        self.tk_temperature_frame = ctk.CTkOptionMenu(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, button_color=vdark_widget_color, values=["-", "V. Hot", "Hot", "Warm", "Cold"], variable=self.tk_temperature_var)
+        self.tk_temperature_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=vlight_widget_color, text_color=subheader_font_color, values=["-", "Very Hot", "Hot", "Warm", "Cold"], variable=self.tk_temperature_var)
         self.tk_temperature_frame.grid(row=4, column=1, sticky="nsew", padx=1, pady=1)
         self.tk_pain_level_var = tk.StringVar(value="-")
-        self.tk_pain_level_frame = ctk.CTkOptionMenu(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, button_color=dark_widget_color, values=["-", "Severe", "Moderate", "Mild Pain", "Mild Itch"], variable=self.tk_pain_level_var)
+        self.tk_pain_level_frame = ctk.CTkSegmentedButton(self.tk_edit_patient_frame, fg_color=light_widget_color, text_color=subheader_font_color, values=["-", "Severe", "Moderate", "Mild Pain", "Mild Itch"], variable=self.tk_pain_level_var)
         self.tk_pain_level_frame.grid(row=5, column=1, sticky="nsew", padx=1, pady=1)
-        self.tk_specific_frame = ctk.CTkFrame(self.tk_edit_patient_frame, bg_color=vdark_widget_color)
-        self.tk_specific_frame.grid(row=6, column=1, sticky="nsew", padx=1, pady=1)
+        self.tk_specific_var = tk.StringVar(value="-")
+        self.tk_specific_selector = ScrolledListbox(self.tk_edit_patient_frame, listvariable=sorted(self.specific_symptoms.keys()), selectmode=tk.MULTIPLE)
+        self.tk_specific_selector.grid(row=6, column=1, sticky="nsew", padx=1, pady=1)
+
+        self.tk_specific_selector.bind('<Configure>', self.on_specific_selector_configure)
 
         self.tk_submit_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Submit", fg_color=button_color, command=self.submit_patient_changes, width=10, border_width=2, border_color=dark_widget_color)
         self.tk_submit_button.grid(row=1, column=2, sticky="nsew", rowspan=7, padx=5, pady=5)
+
+    def on_specific_selector_configure(self, event):
+        style = ttk.Style()
+        style.configure('TCombobox', postoffset=(0,0,0,0))
 
     def add_patient(self):
         ssn = self.tk_add_patient_ssn_entry.get()

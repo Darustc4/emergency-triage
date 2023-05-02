@@ -1,4 +1,4 @@
-@public @buseventtype create json schema Patient as (patient Integer, ssn String, age Integer, latitude Float, longitude Float);
+@public @buseventtype create json schema Patient as (patient Integer, ssn String, age Integer, is_male Boolean, latitude Float, longitude Float);
 
 // [Breathing related symptoms]
 // 0- Airway compromise (stridor, drooling).

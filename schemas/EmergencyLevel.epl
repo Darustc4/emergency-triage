@@ -1,0 +1,1 @@
+@public @buseventtype create json schema EmergencyLevel as (stream String, patient Integer, level Integer);

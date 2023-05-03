@@ -1,0 +1,4 @@
+on LifeThreat
+	insert into EmergencyLevel select patient as patient, 5 as level where type in (0, 1, 2)
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 3
+	output first;

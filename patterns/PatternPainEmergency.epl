@@ -1,0 +1,6 @@
+on Pain
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 0
+	insert into EmergencyLevel select patient as patient, 3 as level where type = 1
+	insert into EmergencyLevel select patient as patient, 2 as level where type = 2
+	insert into EmergencyLevel select patient as patient, 1 as level where type = 3
+	output first;

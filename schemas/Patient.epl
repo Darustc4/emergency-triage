@@ -1,0 +1,1 @@
+@public @buseventtype create json schema Patient as (patient Integer, ssn String, age Integer, is_male Boolean, latitude Float, longitude Float);

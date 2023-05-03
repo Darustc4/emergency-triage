@@ -1,0 +1,1 @@
+@public @buseventtype create json schema ConsciousLevel as (patient Integer, type Integer);

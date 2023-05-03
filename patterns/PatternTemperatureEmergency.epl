@@ -1,0 +1,5 @@
+on TemperatureClassification
+	insert into EmergencyLevel select patient as patient, 4 as level where class in ("very hot", "cold") or (class = "hot" and (select class as class from AgeClassification.win:length(1) a where a.patient=patient) = "baby")
+	insert into EmergencyLevel select patient as patient, 3 as level where class = "hot"
+	insert into EmergencyLevel select patient as patient, 2 as level where class = "warm"
+	output first;

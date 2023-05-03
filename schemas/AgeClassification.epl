@@ -1,0 +1,1 @@
+@public @buseventtype create json schema AgeClassification as (patient Integer, class String);

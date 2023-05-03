@@ -1,0 +1,5 @@
+on ConsciousLevel
+	insert into EmergencyLevel select patient as patient, 5 as level where type = 0 or (type = 1 and (select class as class from AgeClassification.win:length(1) a where a.patient=patient) in ("baby", "child"))
+	insert into EmergencyLevel select patient as patient, 4 as level where type = 1 or type = 2
+	insert into EmergencyLevel select patient as patient, 3 as level where type = 3
+	output first;

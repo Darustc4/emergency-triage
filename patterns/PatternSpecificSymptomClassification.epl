@@ -1,0 +1,7 @@
+on Symptom
+	insert into SymptomClassification select patient as patient, "mental" as class where name in ("self-harm high risk", "other-harm high risk", "violence", "self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily", "recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor", "crying")
+	insert into SymptomClassification select patient as patient, "palpitations" as class where name in ("abnormal pulse", "intoxication history", "chest pain", "palpitations", "significant cardiac history", "relative cardiac history")
+	insert into SymptomClassification select patient as patient, "asthma" as class where name in ("difficulty speaking", "abnormal pulse", "significant respiratory history", "chest pain", "sunken ribs", "ineffective medication", "nostril flare", "dry cough", "wet cough")
+	insert into SymptomClassification select patient as patient, "allergy" as class where name in ("difficulty speaking", "swollen face", "abnormal pulse", "skin rash", "swollen hands", "localized swelling", "recent swelling")
+	insert into SymptomClassification select patient as patient, "diarrvomit" as class where name in ("severe thirst", "slenderness", "blood vomit", "rectal bleeding leakage", "blood vomit history", "red or black deposition", "dehydration signs", "frequent deposition", "vomiting", "anorexia", "nausea", "thrist", "abdominal pain")
+	output all;

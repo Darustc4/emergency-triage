@@ -1,0 +1,7 @@
+on Symptom
+	insert into EmergencyLevel select patient as patient, 5 as level where name in ("severe thirst", "slenderness")
+	insert into EmergencyLevel select patient as patient, 4 as level where name in ("self-harm high risk", "other-harm high risk", "violence", "abnormal pulse", "intoxication history", "chest pain", "difficulty speaking", "significant respiratory history", "sunken ribs", "swollen face", "blood vomit", "rectal bleeding leakage")
+	insert into EmergencyLevel select patient as patient, 3 as level where name in ("self-harm moderate risk", "other-harm moderate risk", "significant distress", "significant psychiatric history", "agressive demeanor", "crying easily", "palpitations", "significant cardiac history", "ineffective medication", "nostril flare", "skin rash", "swollen hands", "blood vomit history", "red or black deposition", "dehydration signs", "frequent deposition")
+	insert into EmergencyLevel select patient as patient, 2 as level where name in ("recent self-harm risk", "recent other-harm risk", "moderate distress", "disruptive demeanor", "dry cough", "localized swelling", "vomiting", "anorexia")
+	insert into EmergencyLevel select patient as patient, 1 as level where name in ("crying", "relative cardiac history", "wet cough", "recent swelling", "nausea", "thrist", "abdominal pain")
+	output first;

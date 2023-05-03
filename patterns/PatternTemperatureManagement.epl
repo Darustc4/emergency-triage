@@ -1,0 +1,6 @@
+on Temperature
+	insert into TemperatureClassification select patient as patient, "very hot" as class where value > 41.0
+	insert into TemperatureClassification select patient as patient, "hot" as class where value > 38.5
+	insert into TemperatureClassification select patient as patient, "warm" as class where value > 37.1
+	insert into TemperatureClassification select patient as patient, "cold" as class where value < 35.0
+	output first;

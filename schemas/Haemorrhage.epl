@@ -1,0 +1,1 @@
+@public @buseventtype create json schema Haemorrhage as (patient Integer, type Integer);

@@ -1,0 +1,1 @@
+@public @buseventtype create json schema Symptom as (patient Integer, name String);

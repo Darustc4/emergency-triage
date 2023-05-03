@@ -1,0 +1,1 @@
+@public @buseventtype create json schema TemperatureClassification as (patient Integer, class String);

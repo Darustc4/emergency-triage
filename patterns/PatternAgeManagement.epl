@@ -1,0 +1,6 @@
+on Patient
+	insert into AgeClassification select patient as patient, "baby" as class where age < 12
+	insert into AgeClassification select patient as patient, "child" as class where age < 216
+	insert into AgeClassification select patient as patient, "adult" as class where age < 780
+	insert into AgeClassification select patient as patient, "elder" as class
+	output first;

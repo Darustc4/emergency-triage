@@ -43,6 +43,9 @@ class Patient:
     emergency_level: int = 0
     emergency_category: EmergencyType = EmergencyType.Generic
 
+    emergency_category_var: tk.StringVar = None
+    emergency_level_var: tk.StringVar = None
+
     def get_sex(self):
         return "Male" if self.is_male else "Female"
 
@@ -66,7 +69,7 @@ class Triage(ctk.CTk):
     def __init__(self):
 
         try:
-            self.cep_manager = Cep_manager()
+            self.cep_manager = Cep_manager(self.cep_pattern_cb)
         except ConnectionError as e:
             print("Could not connect to RabbitMQ. Please start the server and try again.")
             exit()
@@ -115,7 +118,7 @@ class Triage(ctk.CTk):
             "Rectal bleeding leakage": "rectal bleeding leakage",
             "Blood vomit history": "blood vomit history",
             "Red or black deposition": "red or black deposition",
-            "Dehidration signs": "dehidration signs",
+            "Dehydration signs": "dehydration signs",
             "Frequent deposition": "frequent deposition",
             "Vomiting": "vomiting",
             "Anorexia": "anorexia",
@@ -160,9 +163,9 @@ class Triage(ctk.CTk):
         }
         self.inverse_pain_level_options = {v: k for k, v in self.pain_level_options.items()}
 
-        self.patients = []
+        self.patients = dict() # patient_id: Patient_unit
         self.next_patient_id = 0
-        self.selected_patient_idx = None
+        self.selected_patient_id = None
 
         self.create_tk()
         self.clear_edit()
@@ -284,8 +287,8 @@ class Triage(ctk.CTk):
         self.tk_patients_sex_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Sex", bg_color=dark_widget_color, text_color=header_font_color)
         self.tk_patients_longitude_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Longitude", bg_color=vdark_widget_color, text_color=header_font_color)
         self.tk_patients_latitude_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Latitude", bg_color=dark_widget_color, text_color=header_font_color)
-        self.tk_patients_emergency_level_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Emergency Lvl.", bg_color=vdark_widget_color, text_color=header_font_color)
-        self.tk_patients_emergency_class_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Classification", bg_color=dark_widget_color, text_color=header_font_color)
+        self.tk_patients_emergency_class_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Classification", bg_color=vdark_widget_color, text_color=header_font_color)
+        self.tk_patients_emergency_level_label = ctk.CTkLabel(self.tk_patients_list_frame, text="Emergency Lvl.", bg_color=dark_widget_color, text_color=header_font_color)
         self.set_patients_header_grid()
 
         self.tk_patients_canvas_frame =  self.tk_patients_canvas.create_window((0,0), window=self.tk_patients_list_frame, anchor="nw")
@@ -341,7 +344,7 @@ class Triage(ctk.CTk):
         self.tk_specific_selector = ScrolledListbox(self.tk_edit_patient_frame, listvariable=sorted(self.specific_symptoms.keys()), selectmode=tk.MULTIPLE)
         self.tk_specific_selector.grid(row=6, column=1, sticky="nsew", padx=1, pady=1)
 
-        self.tk_delete_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Delete\nPatient", fg_color=dark_widget_color, command=lambda: self.remove_patient_row(self.selected_patient_idx), width=10, border_width=2, border_color=dark_widget_color)
+        self.tk_delete_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Delete\nPatient", fg_color=dark_widget_color, command=lambda: self.remove_patient_row(self.selected_patient_id), width=10, border_width=2, border_color=dark_widget_color)
         self.tk_delete_button.grid(row=1, column=2, sticky="nsew", rowspan=2, padx=5, pady=3)
         self.tk_submit_button = ctk.CTkButton(self.tk_edit_patient_frame, text="Submit\nChanges", fg_color=button_color, command=self.submit_patient_changes, width=10, border_width=2, border_color=dark_widget_color)
         self.tk_submit_button.grid(row=3, column=2, sticky="nsew", rowspan=5, padx=5, pady=3)
@@ -367,6 +370,9 @@ class Triage(ctk.CTk):
         emergency_level = str(patient.emergency_level) if patient.emergency_level else "-"
         classification = patient.classification.name if patient.emergency_level > 0 else "-"
 
+        patient.emergency_category_var = tk.StringVar(value=classification)
+        patient.emergency_level_var = tk.StringVar(value=emergency_level)
+
         patient_row = [None, None, None, None, None, None, None, None]
         patient_row[0] = ctk.CTkButton(self.tk_patients_list_frame, text=str(patient.id), command=lambda: self.patient_selected(patient.id), width=5, border_width=2, border_color=dark_widget_color, fg_color=button_color)
         patient_row[0].grid(row=row, column=0, sticky="nsew", padx=1, pady=1)
@@ -380,13 +386,13 @@ class Triage(ctk.CTk):
         patient_row[4].grid(row=row, column=4, sticky="nsew")
         patient_row[5] = ctk.CTkLabel(self.tk_patients_list_frame, text=latitude, bg_color=vlight_widget_color, text_color=subheader_font_color)
         patient_row[5].grid(row=row, column=5, sticky="nsew")
-        patient_row[6] = ctk.CTkLabel(self.tk_patients_list_frame, text=emergency_level, bg_color=light_widget_color, text_color=subheader_font_color)
+        patient_row[6] = ctk.CTkLabel(self.tk_patients_list_frame, textvariable=patient.emergency_category_var, bg_color=light_widget_color, text_color=subheader_font_color)
         patient_row[6].grid(row=row, column=6, sticky="nsew")
-        patient_row[7] = ctk.CTkLabel(self.tk_patients_list_frame, text=classification, bg_color=vlight_widget_color, text_color=subheader_font_color)
+        patient_row[7] = ctk.CTkLabel(self.tk_patients_list_frame, textvariable=patient.emergency_level_var, bg_color=vlight_widget_color, text_color=subheader_font_color)
         patient_row[7].grid(row=row, column=7, sticky="nsew")
 
         patient_unit = Patient_unit(patient=patient, symptoms=Symptoms(), published=Symptoms(), row=patient_row)
-        self.patients.append(patient_unit)
+        self.patients[patient.id] = patient_unit
 
         self.cep_manager.publish_patient(patient_unit.patient)
 
@@ -395,21 +401,21 @@ class Triage(ctk.CTk):
     def patient_selected(self, id):
         print("Patient " + str(id) + " selected.")
 
-        self.selected_patient_idx = None
-        for idx, patient in enumerate(self.patients):
+        self.selected_patient_id = None
+        for id, patient in self.patients.items():
             row = patient.row
             row[0].configure(fg_color=button_color)
 
             if row[0].cget("text") == str(id):
-                self.selected_patient_idx = idx
+                self.selected_patient_id = id
 
-        self.patients[self.selected_patient_idx].row[0].configure(fg_color=button_highlight_color)
+        self.patients[self.selected_patient_id].row[0].configure(fg_color=button_highlight_color)
 
         self.clear_edit()
-        self.activate_edit(self.patients[self.selected_patient_idx])
+        self.activate_edit(self.patients[self.selected_patient_id])
 
-    def remove_patient_row(self, idx):
-        self.patients.pop(idx)
+    def remove_patient_row(self, id):
+        self.patients.pop(id)
         for widget in self.tk_patients_list_frame.children.values():
             widget.grid_forget()
 
@@ -420,11 +426,9 @@ class Triage(ctk.CTk):
 
         self.tk_patients_list_frame.update_idletasks()
 
-        if self.selected_patient_idx == idx:
-            self.selected_patient_idx = None
+        if self.selected_patient_id == id:
+            self.selected_patient_id = None
             self.clear_edit()
-        elif self.selected_patient_idx > idx:
-            self.selected_patient_idx -= 1
 
     def clear_edit(self):
         self.tk_life_threat_var.set("-")
@@ -476,7 +480,7 @@ class Triage(ctk.CTk):
         if haemorrhage == "-": haemorrhage = None
         if pain_level == "-": pain_level = None
 
-        symptoms_container = self.patients[self.selected_patient_idx].symptoms
+        symptoms_container = self.patients[self.selected_patient_id].symptoms
         symptoms_container.life_threat = self.life_threat_options.get(life_threat)
         symptoms_container.consciousness = self.consciousness_options.get(consciousness)
         symptoms_container.haemorrhage = self.haemorrhage_options.get(haemorrhage)
@@ -484,7 +488,7 @@ class Triage(ctk.CTk):
         symptoms_container.pain_level = self.pain_level_options.get(pain_level)
         symptoms_container.specific = list(map(self.specific_symptoms.get, self.tk_specific_selector.get_selected()))
 
-        self.publish_to_cep(self.patients[self.selected_patient_idx])
+        self.publish_to_cep(self.patients[self.selected_patient_id])
 
     def publish_to_cep(self, patient_unit):
         patient = patient_unit.patient
@@ -512,6 +516,25 @@ class Triage(ctk.CTk):
                     self.cep_manager.publish_specific_symptom(patient.id, symptom)
             published.specific = symptoms.specific
 
+    def cep_pattern_cb(self, pattern):
+        patient_id = int(pattern["patient"])
+        patient = self.patients.get(patient_id)
+
+        if patient is None:
+            print("Patient " + str(patient_id) + " not found. Ignoring pattern.")
+            return
+        patient = patient.patient
+
+        print("Pattern for patient " + str(patient_id) + ": " + str(pattern))
+
+        if pattern["stream"] == "Classification":
+            patient.emergency_category = pattern["class"]
+            patient.emergency_category_var.set(pattern["class"].capitalize())
+        elif pattern["stream"] == "Level":
+            patient.emergency_level = int(pattern["level"])
+            patient.emergency_level_var.set(str(pattern["level"]))
+
+        self.tk_patients_list_frame.update_idletasks()
 
     def set_patients_header_grid(self):
         self.tk_patients_id_label.grid(row=0, column=0, sticky="nsew")
@@ -520,8 +543,8 @@ class Triage(ctk.CTk):
         self.tk_patients_sex_label.grid(row=0, column=3, sticky="nsew")
         self.tk_patients_longitude_label.grid(row=0, column=4, sticky="nsew")
         self.tk_patients_latitude_label.grid(row=0, column=5, sticky="nsew")
-        self.tk_patients_emergency_level_label.grid(row=0, column=6, sticky="nsew")
-        self.tk_patients_emergency_class_label.grid(row=0, column=7, sticky="nsew")
+        self.tk_patients_emergency_class_label.grid(row=0, column=6, sticky="nsew")
+        self.tk_patients_emergency_level_label.grid(row=0, column=7, sticky="nsew")
 
     def on_patients_list_frame_configure(self, event):
         self.tk_patients_canvas.configure(scrollregion=self.tk_patients_canvas.bbox("all"))

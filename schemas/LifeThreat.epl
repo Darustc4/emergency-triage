@@ -1,0 +1,1 @@
+@public @buseventtype create json schema LifeThreat as (patient Integer, type Integer);

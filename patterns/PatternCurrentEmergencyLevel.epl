@@ -1,1 +1,1 @@
-select "Level" as stream, patient as patient, max(level) as level from EmergencyLevel.win:time(8 hours);
+select "Level" as stream, patient as patient, max(level) as level from EmergencyLevel.win:time(8 hours) group by patient;

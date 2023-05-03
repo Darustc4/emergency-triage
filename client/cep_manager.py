@@ -35,37 +35,43 @@ class PikaSubscriber():
 
             callback(json.loads(s)["stmt0_out0"])
 
-    def __enter__(self):
-        return self
+    def close(self):
+        self.conn.add_callback_threadsafe(self._close_callback)
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def _close_callback(self):
+        self.channel.stop_consuming()
+        self.channel.close()
         self.conn.close()
 
 class Cep_manager:
-    def __init__(self, pattern_cb) -> None:
-        self.pattern_cb = pattern_cb
+    def __init__(self):
+        self.pattern_cb = None
         self.connection = None
         self.channel = None
 
         self.conn, self.channel = connection_factory()
+        self.consumer = None
+
+    def start_consuming(self, pattern_cb):
+        self.pattern_cb = pattern_cb
 
         # Lauch thread for subscriber
         subscriber = Thread(target=self._subscribe, args=(pattern_cb,))
         subscriber.start()
 
     def _subscribe(self, callback):
-        with PikaSubscriber() as consumer:
-            consumer.consume(callback)
+        self.consumer = PikaSubscriber()
+        self.consumer.consume(callback)
 
     def publish_patient(self, patient):
         body = json.dumps({
             "eventTypeName": "Patient",
             "patient": patient.id,
-            "ssn": patient.ssn,
-            "age": patient.age,
+            "ssn": patient.ssn if patient.ssn != "" else None,
+            "age": patient.age if patient.age != "" else None,
             "is_male": patient.is_male,
-            "latitude": patient.latitude,
-            "longitude": patient.longitude
+            "latitude": patient.latitude if patient.latitude != "" else None,
+            "longitude": patient.longitude if patient.longitude != "" else None,
         })
         self._publish_to_queue('Messages', body)
 
@@ -117,7 +123,16 @@ class Cep_manager:
         })
         self._publish_to_queue('Messages', body)
 
-
     def _publish_to_queue(self, queue, body):
         print("Publishing to queue " + queue + ": " + body)
         self.channel.basic_publish(exchange='', routing_key=queue, body=body)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.channel.close()
+        self.conn.close()
+
+        if self.consumer:
+            self.consumer.close()

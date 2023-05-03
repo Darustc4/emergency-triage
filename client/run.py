@@ -46,6 +46,8 @@ class Patient:
     emergency_category_var: tk.StringVar = None
     emergency_level_var: tk.StringVar = None
 
+    category_factors: int = 0
+
     def get_sex(self):
         return "Male" if self.is_male else "Female"
 
@@ -66,13 +68,10 @@ class Patient_unit:
     row: list
 
 class Triage(ctk.CTk):
-    def __init__(self):
+    def __init__(self, cep_manager):
 
-        try:
-            self.cep_manager = Cep_manager(self.cep_pattern_cb)
-        except ConnectionError as e:
-            print("Could not connect to RabbitMQ. Please start the server and try again.")
-            exit()
+        self.cep_manager = cep_manager
+        self.cep_manager.start_consuming(self.cep_pattern_cb)
 
         # These symptoms are only for mental, palpitations, asthma, allergy and diarrhea and vomit emergencies. The complete list of symptoms is in the Manchester Triage handbook.
         self.specific_symptoms = {
@@ -399,16 +398,13 @@ class Triage(ctk.CTk):
         self.next_patient_id += 1
 
     def patient_selected(self, id):
-        print("Patient " + str(id) + " selected.")
+        self.selected_patient_id = id
 
-        self.selected_patient_id = None
-        for id, patient in self.patients.items():
-            row = patient.row
-            row[0].configure(fg_color=button_color)
+        # Reset all button colors
+        for patient in self.patients.values():
+            patient.row[0].configure(fg_color=button_color)
 
-            if row[0].cget("text") == str(id):
-                self.selected_patient_id = id
-
+        # Highlight selected button
         self.patients[self.selected_patient_id].row[0].configure(fg_color=button_highlight_color)
 
         self.clear_edit()
@@ -420,8 +416,8 @@ class Triage(ctk.CTk):
             widget.grid_forget()
 
         self.set_patients_header_grid()
-        for row, patient in enumerate(self.patients):
-            for column, i in enumerate(patient.row):
+        for row, key in enumerate(sorted(self.patients)):
+            for column, i in enumerate(self.patients[key].row):
                 i.grid(row=row+1, column=column, sticky="nsew")
 
         self.tk_patients_list_frame.update_idletasks()
@@ -528,11 +524,16 @@ class Triage(ctk.CTk):
         print("Pattern for patient " + str(patient_id) + ": " + str(pattern))
 
         if pattern["stream"] == "Classification":
-            patient.emergency_category = pattern["class"]
-            patient.emergency_category_var.set(pattern["class"].capitalize())
+            factors = int(pattern["factors"])
+            if not patient.category_factors or factors > patient.category_factors:
+                patient.category_factors = factors
+                patient.emergency_category = pattern["class"]
+                patient.emergency_category_var.set(pattern["class"].capitalize())
         elif pattern["stream"] == "Level":
-            patient.emergency_level = int(pattern["level"])
-            patient.emergency_level_var.set(str(pattern["level"]))
+            # Ignore patterns with lower level than the current one (May be due to unordered arrival of patterns).
+            if not patient.emergency_level or int(pattern["level"]) > patient.emergency_level:
+                patient.emergency_level = int(pattern["level"])
+                patient.emergency_level_var.set(str(pattern["level"]))
 
         self.tk_patients_list_frame.update_idletasks()
 
@@ -553,5 +554,10 @@ class Triage(ctk.CTk):
         self.tk_patients_canvas.itemconfigure(self.tk_patients_canvas_frame, width=event.width)
 
 if __name__ == "__main__":
-    app = Triage()
-    app.mainloop()
+    try:
+        with Cep_manager() as cep_manager:
+            app = Triage(cep_manager=cep_manager)
+            app.mainloop()
+    except ConnectionError as e:
+            print("Could not connect to RabbitMQ. Please start the server and try again.")
+            exit()

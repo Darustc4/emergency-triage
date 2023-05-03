@@ -68,7 +68,7 @@ class Cep_manager:
             "eventTypeName": "Patient",
             "patient": patient.id,
             "ssn": patient.ssn if patient.ssn != "" else None,
-            "age": patient.age if patient.age != "" else None,
+            "age": int(patient.age)*12 if patient.age != "" else None, # Months
             "is_male": patient.is_male,
             "latitude": patient.latitude if patient.latitude != "" else None,
             "longitude": patient.longitude if patient.longitude != "" else None,
